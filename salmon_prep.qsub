@@ -1,0 +1,18 @@
+#!/bin/bash -l
+
+#$ -P bf528
+#$ -j y
+#$ -cwd
+#$ -pe omp 16
+#$ -l mem_total=200G
+#$ -m be
+#$ -o salmon_prep.log
+#$ -N salmon_prep
+
+module load salmon
+
+# Create salmon index
+salmon index -t gencode.v37.transcripts.fa.gz -i index --gencode
+
+# Create transcript to gene map
+zcat gencode.v37.primary_assembly.annotation.gtf.gz | awk '{if ($9 == "gene_id"){print $0}}' | awk '{if ($11 == "transcript_id"){print $12 "\t" $10}}'| tr -d ";\"" | awk '!visited[$0]++' > txp2gene.tsv

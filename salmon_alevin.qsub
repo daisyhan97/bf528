@@ -1,0 +1,31 @@
+#!/bin/bash -l
+
+#$ -P bf528
+#$ -j y
+#$ -cwd
+#$ -pe omp 16
+#$ -l mem_total=200G
+#$ -m be
+#$ -o salmon_alevin.log
+#$ -N salmon_alevin
+
+echo "Running job $JOB_ID"
+echo "Started: $(date +%F)"
+echo "Running in directory: $PWD"
+
+module load salmon
+
+### Run each individually ###
+# Run 1 #
+#salmon alevin -l ISR -1 /projectnb/bf528/project_4_scrnaseq/fastq/SRR3879604/SRR3879604_1_bc.fastq.gz -2 /projectnb/bf528/project_4_scrnaseq/fastq/SRR3879604/SRR3879604_2.fastq.gz -i index -p 10 -o SRR387604_salmon --tgMap txp2gene.tsv --whitelist SRR3879604_whitelist.txt --end 5 --barcodeLength 19 --umiLength 6
+# Run 2 #
+#salmon alevin -l ISR -1 /projectnb/bf528/project_4_scrnaseq/fastq/SRR3879605/SRR3879605_1_bc.fastq.gz -2 /projectnb/bf528/project_4_scrnaseq/fastq/SRR3879605/SRR3879605_2.fastq.gz -i index -p 10 -o SRR387605_salmon --tgMap txp2gene.tsv --whitelist SRR3879605_whitelist.txt --end 5 --barcodeLength 19 --umiLength 6
+# Run 3 #
+#salmon alevin -l ISR -1 /projectnb/bf528/project_4_scrnaseq/fastq/SRR3879606/SRR3879606_1_bc.fastq.gz -2 /projectnb/bf528/project_4_scrnaseq/fastq/SRR3879606/SRR3879606_2.fastq.gz -i index -p 10 -o SRR387606_salmon --tgMap txp2gene.tsv --whitelist SRR3879606_whitelist.txt --end 5 --barcodeLength 19 --umiLength 6
+
+### Run all together ###
+
+salmon alevin -l ISR -1 /projectnb/bf528/project_4_scrnaseq/fastq/SRR3879604/SRR3879604_1_bc.fastq.gz /projectnb/bf528/project_4_scrnaseq/fastq/SRR3879605/SRR3879605_1_bc.fastq.gz /projectnb/bf528/project_4_scrnaseq/fastq/SRR3879606/SRR3879606_1_bc.fastq.gz -2 /projectnb/bf528/project_4_scrnaseq/fastq/SRR3879604/SRR3879604_2.fastq.gz /projectnb/bf528/project_4_scrnaseq/fastq/SRR3879605/SRR3879605_2.fastq.gz /projectnb/bf528/project_4_scrnaseq/fastq/SRR3879606/SRR3879606_2.fastq.gz -i index -p 10 -o salmon_output --tgMap txp2gene.tsv --whitelist combined_whitelist.txt --end 5 --barcodeLength 19 --umiLength 6
+
+echo "Finished!"
+

@@ -1,0 +1,100 @@
+#!/bin/bash -l
+
+#$ -P bf528
+#$ -j y
+#$ -cwd
+#$ -pe omp 16
+#$ -l mem_total=200G
+#$ -m be
+#$ -o whitelist.log
+#$ -N whitelist
+
+echo "Running job $JOB_ID"
+echo "Started: $(date +%F)"
+echo "Running in directory: $PWD"
+
+run1="SRR3879604"
+run2="SRR3879605"
+run3="SRR3879606"
+
+### RUN 1 ###
+
+#Generate counts for each barcode
+zcat /projectnb/bf528/project_4_scrnaseq/fastq/SRR3879604/SRR3879604_1_bc.fastq.gz | awk '{if (NR%4==2){print substr($1,1,19) "\t" substr($1,20,6)}}' | cut -f 1 | sort | uniq -c > ${run1}_barcode_freq.txt
+
+#Generate cumulative distribution plot
+cat ${run1}_barcode_freq.txt | awk '{print $1}' | sort -n | uniq -c | awk '{print $2 "\t" $1}' | awk '{sum=sum+$2; print $0 "\t" sum}' > ${run1}_cdf.txt
+
+#Calculate Mean
+avg=$(awk '{sum=sum+$1}END {print sum/NR}' ${run1}_cdf.txt)
+
+#Calculate Standard Deviation
+stddev=$(awk '{delta = $1 - avg; avg += delta / NR; mean2 += delta * ($1 - avg); } END { print sqrt(mean2 / NR)}' ${run1}_cdf.txt)
+
+#Whitelisted Barcodes
+awk -v stddev=$stddev -v avg=$avg '{if($1 > avg ){print $1}}' ${run1}_cdf.txt > ${run1}_freq_list.txt 
+awk 'NR==FNR{F1[$0];next}$1 in F1{print $2}' ${run1}_freq_list.txt ${run1}_barcode_freq.txt > ${run1}_whitelist.txt
+
+#Print
+echo "${run1} Sample Statistics"
+echo "Average: ${avg}"
+echo "Standard Deviation: ${stddev}"
+
+
+### RUN 2 ###
+
+#Generate counts for each barcode
+zcat /projectnb/bf528/project_4_scrnaseq/fastq/SRR3879605/SRR3879605_1_bc.fastq.gz | awk '{if (NR%4==2){print substr($1,1,19) "\t" substr($1,20,6)}}' | cut -f 1 | sort | uniq -c > ${run2}_barcode_freq.txt
+
+#Generate cumulative distribution plot
+cat ${run2}_barcode_freq.txt | awk '{print $1}' | sort -n | uniq -c | awk '{print $2 "\t" $1}' | awk '{sum=sum+$2; print $0 "\t" sum}' > ${run2}_cdf.txt
+
+#Calculate Mean
+avg=$(awk '{sum=sum+$1}END {print sum/NR}' ${run2}_cdf.txt)
+
+#Calculate Standard Deviation
+stddev=$(awk '{delta = $1 - avg; avg += delta / NR; mean2 += delta * ($1 - avg); } END { print sqrt(mean2 / NR)}' ${run2}_cdf.txt)
+
+#Whitelisted Barcodes
+awk -v stddev=$stddev -v avg=$avg '{if($1 > avg ){print $1}}' ${run2}_cdf.txt > ${run2}_freq_list.txt 
+awk 'NR==FNR{F1[$0];next}$1 in F1{print $2}' ${run2}_freq_list.txt ${run2}_barcode_freq.txt > ${run2}_whitelist.txt
+
+#Print
+echo "${run2} Sample Statistics"
+echo "Average: ${avg}"
+echo "Standard Deviation: ${stddev}"
+
+
+### RUN 3 ###
+
+#Generate counts for each barcode
+zcat /projectnb/bf528/project_4_scrnaseq/fastq/SRR3879606/SRR3879606_1_bc.fastq.gz | awk '{if (NR%4==2){print substr($1,1,19) "\t" substr($1,20,6)}}' | cut -f 1 | sort | uniq -c > ${run3}_barcode_freq.txt
+
+#Generate cumulative distribution plot
+cat ${run3}_barcode_freq.txt | awk '{print $1}' | sort -n | uniq -c | awk '{print $2 "\t" $1}' | awk '{sum=sum+$2; print $0 "\t" sum}' > ${run3}_cdf.txt
+
+#Calculate Mean
+avg=$(awk '{sum=sum+$1}END {print sum/NR}' ${run3}_cdf.txt)
+
+#Calculate Standard Deviation
+stddev=$(awk '{delta = $1 - avg; avg += delta / NR; mean2 += delta * ($1 - avg); } END { print sqrt(mean2 / NR)}' ${run3}_cdf.txt)
+
+#Whitelisted Barcodes
+awk -v stddev=$stddev -v avg=$avg '{if($1 > avg ){print $1}}' ${run3}_cdf.txt > ${run3}_freq_list.txt 
+awk 'NR==FNR{F1[$0];next}$1 in F1{print $2}' ${run3}_freq_list.txt ${run3}_barcode_freq.txt > ${run3}_whitelist.txt
+
+#Print
+echo "${run3} Sample Statistics"
+echo "Average: ${avg}"
+echo "Standard Deviation: ${stddev}"
+
+### Revised ###
+
+# cat ${run1}_barcode_freq.txt | awk '{if ($1 > 50000){print $2}}' > ${run1}_whitelist.txt
+# cat ${run2}_barcode_freq.txt | awk '{if ($1 > 50000){print $2}}' > ${run2}_whitelist.txt
+# cat ${run3}_barcode_freq.txt | awk '{if ($1 > 50000){print $2}}' > ${run3}_whitelist.txt
+
+### Combine into singe whitelist of barcodes ###
+
+cat ${run1}_whitelist.txt ${run2}_whitelist.txt ${run3}_whitelist.txt > combined_whitelist.txt
+
